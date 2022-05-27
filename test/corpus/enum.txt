@@ -11,13 +11,66 @@ enum Simple {
 -------------------------------------------------------
 
 (source_file
-  (declaration
-    (enum_declaration
-      (type_identifier)
-      (block
+  (enum_declaration
+    (type_identifier)
+    (enum_block
+      (identifier)
+      (identifier)
+      (identifier))))
+
+=======================================================
+Simple enum with type
+=======================================================
+
+enum SimpleWithType {
+    A(i32)
+    B(u32)
+}
+
+-------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_block
+      (enum_integral_type
         (identifier)
+        (primitive_type))
+      (enum_integral_type
         (identifier)
-        (identifier)))))
+        (primitive_type)))))
+
+
+
+=======================================================
+Simple enum with struct type
+=======================================================
+
+enum SimpleWithStructType {
+    A (
+        a: i32
+        b: u32
+    )
+    B(i32)
+}
+
+-------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_block
+      (enum_struct_integral_type
+        (identifier)
+        (parameter
+          (identifier)
+          (primitive_type))
+        (parameter
+          (identifier)
+          (primitive_type)))
+      (enum_integral_type
+        (identifier)
+        (primitive_type)))))
 
 =======================================================
 Enum on single line
@@ -28,8 +81,7 @@ enum Apple { GrannySmith }
 -------------------------------------------------------
 
 (source_file
-  (declaration
-    (enum_declaration
-      (type_identifier)
-      (block
-        (identifier)))))
+  (enum_declaration
+    (type_identifier)
+    (enum_block
+      (identifier))))
