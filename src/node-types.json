@@ -38,6 +38,10 @@
     "named": true,
     "subtypes": [
       {
+        "type": "binary_literal",
+        "named": true
+      },
+      {
         "type": "boolean_literal",
         "named": true
       },
@@ -384,29 +388,6 @@
     }
   },
   {
-    "type": "enum_block",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "enum_integral_type",
-          "named": true
-        },
-        {
-          "type": "enum_struct_integral_type",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "enum_declaration",
     "named": true,
     "fields": {
@@ -415,31 +396,35 @@
         "required": true,
         "types": [
           {
-            "type": "enum_block",
+            "type": "enum_variant_list",
             "named": true
           }
         ]
       },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
+          {
+            "type": "enum_integral_type",
+            "named": true
+          },
           {
             "type": "type_identifier",
             "named": true
           }
         ]
-      },
-      "type_parameters": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "parameters",
-            "named": true
-          }
-        ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "reference_modifier",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -451,30 +436,107 @@
       "required": true,
       "types": [
         {
-          "type": "identifier",
+          "type": "_type",
           "named": true
         },
         {
-          "type": "primitive_type",
+          "type": "identifier",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "enum_struct_integral_type",
+    "type": "enum_variant",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "field_declaration_list",
+            "named": true
+          },
+          {
+            "type": "ordered_field_declaration_list",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "enum_variant_list",
     "named": true,
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
-          "type": "identifier",
+          "type": "enum_variant",
           "named": true
-        },
+        }
+      ]
+    }
+  },
+  {
+    "type": "field_declaration",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "field_identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "field_declaration_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
         {
-          "type": "parameter",
+          "type": "field_declaration",
           "named": true
         }
       ]
@@ -679,6 +741,25 @@
     }
   },
   {
+    "type": "ordered_field_declaration_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "field_declaration",
+          "named": true
+        },
+        {
+          "type": "primitive_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "parameter",
     "named": true,
     "fields": {
@@ -743,6 +824,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "reference_modifier",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "return_statement",
@@ -955,6 +1041,10 @@
     "named": false
   },
   {
+    "type": "binary_literal",
+    "named": true
+  },
+  {
     "type": "char_literal",
     "named": true
   },
@@ -977,6 +1067,10 @@
   {
     "type": "false",
     "named": false
+  },
+  {
+    "type": "field_identifier",
+    "named": true
   },
   {
     "type": "float_literal",
@@ -1021,6 +1115,10 @@
   {
     "type": "primitive_type",
     "named": true
+  },
+  {
+    "type": "ref",
+    "named": false
   },
   {
     "type": "return",

@@ -42,6 +42,8 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
+  extras: $ => [/\s/, $.line_comment],
+
   externals: $ => [
     $._string_content,
     $.float_literal,
@@ -65,6 +67,7 @@ module.exports = grammar({
   conflicts: $ => [
     [$._type, $._pattern],
     [$.parameters, $._pattern],
+    [$.field_declaration_list, $.ordered_field_declaration_list],
   ],
 
   rules: {
@@ -178,34 +181,59 @@ module.exports = grammar({
       )),
     ),
 
-    enum_declaration: $ => seq(
-      'enum',
-      field('name', $._type_identifier),
-      optional(field('type_parameters', optional($.parameters))),
-      field('body', $.enum_block)
-    ),
+    reference_modifier: $ => seq('ref'),
 
-    enum_block: $ => seq(
-      '{',
-        repeat(choice(
-          $.identifier,
-          $.enum_integral_type,
-          $.enum_struct_integral_type,
-        )),
-      '}'
+    enum_declaration: $ => seq(
+      optional($.reference_modifier),
+      'enum',
+      field('name', choice($._type_identifier, optional($.enum_integral_type))),
+      field('body', $.enum_variant_list)
     ),
 
     enum_integral_type: $ => seq(
-      $.identifier,
-      '(',
-       alias(choice(...primitive_types), $.primitive_type),
-      ')',
+        $.identifier,
+        ':',
+        $._type,
     ),
 
-    enum_struct_integral_type: $ => seq(
-      $.identifier,
+    enum_variant_list: $ => seq(
+      '{',
+      sepBy('\\n', repeat($.enum_variant)),
+      '}'
+    ),
+
+    enum_variant: $ => seq(
+      field('name', $.identifier),
+      field('body', optional(choice(
+        $.field_declaration_list,
+        $.ordered_field_declaration_list
+      ))),
+      optional(seq(
+        '=',
+        field('value', $._expression)
+      ))
+    ),
+
+    field_declaration_list: $ => seq(
       '(',
-      sepBy('\\n', repeat($.parameter)),
+      sepBy('\\n', seq(repeat($.field_declaration))),
+      ')'
+    ),
+
+    field_declaration: $ => seq(
+      field('name', $._field_identifier),
+      ':',
+      field('type', $._type)
+    ),
+
+    _field_identifier: $ => alias($.identifier, $.field_identifier),
+
+    ordered_field_declaration_list: $ => seq(
+      '(',
+      choice(
+        alias(choice(...primitive_types), $.primitive_type),
+        sepBy(',', $.field_declaration),
+      ),
       ')',
     ),
 
@@ -243,6 +271,7 @@ module.exports = grammar({
       $.char_literal,
       $.boolean_literal,
       $.integer_literal,
+      $.binary_literal,
       $.float_literal,
     ),
 
@@ -267,10 +296,16 @@ module.exports = grammar({
       choice(
         /[0-9][0-9_]*/,
         /0x[0-9a-fA-F_]+/,
-        /0b[01_]+/,
         /0o[0-7_]+/
       ),
       optional(choice(...numeric_types))
+    )),
+
+    binary_literal: $ => token(seq(
+      choice(
+        /0b[01_]+/,
+      ),
+      // optional(choice(...numeric_types))
     )),
 
     string_literal: $ => seq(
@@ -359,9 +394,7 @@ module.exports = grammar({
 
     boolean_literal: $ => choice('true', 'false'),
 
-    comment: $ => choice(
-      $.line_comment,
-    ),
+    comment: $ => $.line_comment,
 
     line_comment: $ => token(seq(
       '//', /.*/

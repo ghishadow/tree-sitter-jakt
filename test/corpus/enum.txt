@@ -1,6 +1,6 @@
-=======================================================
+================================================================================
 Simple enum
-=======================================================
+================================================================================
 
 enum Simple {
     A
@@ -8,43 +8,46 @@ enum Simple {
     C
 }
 
--------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (enum_declaration
     (type_identifier)
-    (enum_block
-      (identifier)
-      (identifier)
-      (identifier))))
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier)))))
 
-=======================================================
+================================================================================
 Simple enum with type
-=======================================================
+================================================================================
 
 enum SimpleWithType {
     A(i32)
     B(u32)
 }
 
--------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (enum_declaration
     (type_identifier)
-    (enum_block
-      (enum_integral_type
+    (enum_variant_list
+      (enum_variant
         (identifier)
-        (primitive_type))
-      (enum_integral_type
+        (ordered_field_declaration_list
+          (primitive_type)))
+      (enum_variant
         (identifier)
-        (primitive_type)))))
+        (ordered_field_declaration_list
+          (primitive_type))))))
 
-
-
-=======================================================
+================================================================================
 Simple enum with struct type
-=======================================================
+================================================================================
 
 enum SimpleWithStructType {
     A (
@@ -54,34 +57,121 @@ enum SimpleWithStructType {
     B(i32)
 }
 
--------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (enum_declaration
     (type_identifier)
-    (enum_block
-      (enum_struct_integral_type
+    (enum_variant_list
+      (enum_variant
         (identifier)
-        (parameter
-          (identifier)
-          (primitive_type))
-        (parameter
-          (identifier)
-          (primitive_type)))
-      (enum_integral_type
+        (field_declaration_list
+          (field_declaration
+            (field_identifier)
+            (primitive_type))
+          (field_declaration
+            (field_identifier)
+            (primitive_type))))
+      (enum_variant
         (identifier)
-        (primitive_type)))))
+        (ordered_field_declaration_list
+          (primitive_type))))))
 
-=======================================================
+================================================================================
 Enum on single line
-=======================================================
+================================================================================
 
 enum Apple { GrannySmith }
 
--------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (enum_declaration
     (type_identifier)
-    (enum_block
-      (identifier))))
+    (enum_variant_list
+      (enum_variant
+        (identifier)))))
+
+================================================================================
+Simple enum with mixed variants
+================================================================================
+
+enum SimpleWithStructType {
+    A 
+    B(i32)
+    C
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier)
+        (ordered_field_declaration_list
+          (primitive_type)))
+      (enum_variant
+        (identifier)))))
+
+================================================================================
+Enum with underlying type
+================================================================================
+
+enum IntegralWithUnderlyingType: i32 {
+    Zero
+    One = 2
+    Two
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (enum_integral_type
+      (identifier)
+      (primitive_type))
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier)
+        (integer_literal))
+      (enum_variant
+        (identifier)))))
+
+================================================================================
+Ref counted recursive enum
+================================================================================
+
+ref enum AST {
+    Int(i64)
+    BinaryOperation(lhs: AST, op: Operation, rhs: AST)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (reference_modifier)
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier)
+        (ordered_field_declaration_list
+          (primitive_type)))
+      (enum_variant
+        (identifier)
+        (ordered_field_declaration_list
+          (field_declaration
+            (field_identifier)
+            (type_identifier))
+          (field_declaration
+            (field_identifier)
+            (type_identifier))
+          (field_declaration
+            (field_identifier)
+            (type_identifier)))))))
