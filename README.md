@@ -4,7 +4,11 @@
 
 Jakt is a memory safe programming language created for SerenityOS that transpiles to C++.
 
+## Roadmap
+
 **Work in progress. Jakt is under heavy development.**
+
+tree-sitter-jakt implements 6.71 of 166 (4.0%) of the Jakt samples as of June 1, 2022
 
 ## Screenshot
 
@@ -12,12 +16,14 @@ Jakt is a memory safe programming language created for SerenityOS that transpile
 
 ## How to run tests
 
-The [tree-sitter
-cli](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md) is required to run tests.
+The [tree-sitter cli](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md) is required to run tests.
 
 ```
 tree-sitter generate && tree-sitter test
 ```
+## Contributing
+
+See the [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## How to install in Neovim
 
