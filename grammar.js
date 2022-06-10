@@ -73,7 +73,6 @@ module.exports = grammar({
   rules: {
 
     source_file: $ => repeat(choice(
-      // Terminator ';' is not a language feature. It's only here to aid in testing.
       seq($._statement, terminator),
       $._top_level_declaration,
     )),
@@ -92,6 +91,7 @@ module.exports = grammar({
 
     declaration: $ => choice(
       $.let_declaration,
+      $.mutable_declaration,
       $.enum_declaration,
     ),
 
@@ -124,7 +124,6 @@ module.exports = grammar({
     continue_statement: $ => seq('continue'),
 
     for_expression: $ => seq(
-      // optional(seq($.loop_label, ':')),
       'for',
       field('pattern', $._pattern),
       'in',
@@ -139,16 +138,19 @@ module.exports = grammar({
 
     range_expression: $ => prec.left(PREC.range, choice(
       seq($._expression, choice('..'), $._expression),
-      // seq($._expression, '..'),
-      // seq('..', $._expression),
       '..'
     )),
 
     arguments: $ => seq(
       '(',
-      sepBy(',', seq(repeat($.parameter), $._expression)),
-      optional(','),
+      optional(sepBy(',', choice(repeat($.argument), $._expression))),
       ')'
+    ),
+
+    argument: $ => seq(
+      field('label', choice($._pattern)),
+      ':',
+      $._expression
     ),
 
     _top_level_declaration: $ => choice(
@@ -169,7 +171,6 @@ module.exports = grammar({
 
     let_declaration: $ => seq(
       'let',
-      optional($.mutable_specifier),
       field('pattern', $._pattern),
       optional(seq(
         ':',
@@ -181,6 +182,18 @@ module.exports = grammar({
       )),
     ),
 
+    mutable_declaration: $ => seq(
+      'mut',
+      field('pattern', $._pattern),
+      optional(seq(
+        ':',
+        field('type', $._type)
+      )),
+      optional(seq(
+        '=',
+        field('value', $._expression)
+      )),
+    ),
     boxed_modifier: $ => seq('boxed'),
 
     enum_declaration: $ => seq(
@@ -237,7 +250,7 @@ module.exports = grammar({
       ')',
     ),
 
-    mutable_specifier: $ => 'mutable',
+    mutable_specifier: $ => 'mut',
 
     unary_expression: $ => prec(PREC.unary, seq(
       '-', $._expression
@@ -255,7 +268,7 @@ module.exports = grammar({
         [PREC.bitxor, '^'],
         [PREC.comparative, choice('==', '!=', '<', '<=', '>', '>=')],
         [PREC.shift, choice('<<', '>>')],
-        [PREC.additive, choice('+', '-')],
+        [PREC.additive, choice('+', '-', '+=')],
         [PREC.multiplicative, choice('*', '/', '%')],
       ];
 
@@ -305,7 +318,6 @@ module.exports = grammar({
       choice(
         /0b[01_]+/,
       ),
-      // optional(choice(...numeric_types))
     )),
 
     string_literal: $ => seq(
@@ -361,13 +373,15 @@ module.exports = grammar({
     ),
 
     parameter: $ => seq(
-      optional($.mutable_specifier),
+      optional($.anonymous_specifier),
       field('pattern', choice(
         $._pattern,
       )),
       ':',
       field('type', $._type)
     ),
+
+    anonymous_specifier: $ => 'anon',
 
     block: $ => seq(
       '{',

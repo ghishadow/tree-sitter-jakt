@@ -1,0 +1,18 @@
+================================================================================
+Function call with two args
+================================================================================
+
+greet(msg: "Well", msg2: "hello friends.")
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (call_expression
+    (identifier)
+    (arguments
+      (argument
+        (identifier)
+        (string_literal))
+      (argument
+        (identifier)
+        (string_literal)))))

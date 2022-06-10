@@ -144,6 +144,10 @@
         "named": true
       },
       {
+        "type": "mutable_declaration",
+        "named": true
+      },
+      {
         "type": "return_statement",
         "named": true
       },
@@ -172,6 +176,32 @@
     ]
   },
   {
+    "type": "argument",
+    "named": true,
+    "fields": {
+      "label": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_pattern",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "arguments",
     "named": true,
     "fields": {},
@@ -184,7 +214,7 @@
           "named": true
         },
         {
-          "type": "parameter",
+          "type": "argument",
           "named": true
         }
       ]
@@ -242,6 +272,10 @@
           },
           {
             "type": "+",
+            "named": false
+          },
+          {
+            "type": "+=",
             "named": false
           },
           {
@@ -714,16 +748,42 @@
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "mutable_specifier",
-          "named": true
-        }
-      ]
+    }
+  },
+  {
+    "type": "mutable_declaration",
+    "named": true,
+    "fields": {
+      "pattern": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_pattern",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_type",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -794,7 +854,7 @@
       "required": false,
       "types": [
         {
-          "type": "mutable_specifier",
+          "type": "anonymous_specifier",
           "named": true
         }
       ]
@@ -961,6 +1021,10 @@
     "named": false
   },
   {
+    "type": "+=",
+    "named": false
+  },
+  {
     "type": ",",
     "named": false
   },
@@ -1041,6 +1105,10 @@
     "named": false
   },
   {
+    "type": "anonymous_specifier",
+    "named": true
+  },
+  {
     "type": "binary_literal",
     "named": true
   },
@@ -1113,8 +1181,8 @@
     "named": true
   },
   {
-    "type": "mutable_specifier",
-    "named": true
+    "type": "mut",
+    "named": false
   },
   {
     "type": "primitive_type",
