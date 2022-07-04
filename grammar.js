@@ -38,6 +38,8 @@ const primitive_types = numeric_types.concat(['bool', 'String', 'c_char'])
 
 terminator = choice('\n', ';')
 
+identifier = /[_\p{XID_Start}][_\p{XID_Continue}]*/
+
 module.exports = grammar({
   name: 'jakt',
 
@@ -68,18 +70,16 @@ module.exports = grammar({
 
   conflicts: $ => [
     [$._type, $._pattern],
-    [$.parameters, $._pattern],
-    [$.field_declaration_list, $.ordered_field_declaration_list],
     [$._expression, $.array_expression],
-    [$.array_literal, $.array_expression],
   ],
 
   rules: {
 
-    source_file: $ => repeat(choice(
-      seq($._statement, terminator),
-      $._top_level_declaration,
-    )),
+    source_file: $ => repeat(
+      choice(
+        seq($._statement, optional(terminator)),
+      )
+    ),
 
     _statement: $ => choice(
       $.declaration,
@@ -103,12 +103,15 @@ module.exports = grammar({
       $.enum_declaration,
       $.struct_declaration,
       $.class_declaration,
+      $.namespace_declaration,
+      $.function_declaration,
     ),
 
     _expression: $ => choice(
       $.unary_expression,
       $.binary_expression,
       $._literal,
+      $.this_specifier_shorthand,
       $.identifier,
       $.optional_identifier,
       $.raw_pointer_identfier,
@@ -183,6 +186,12 @@ module.exports = grammar({
       $._expression,
     ),
 
+    namespace_declaration: $ => seq(
+      'namespace',
+      field('pattern', $._pattern),
+      field('body', $.block)
+    ),
+
     for_expression: $ => seq(
       'for',
       field('pattern', $._pattern),
@@ -195,7 +204,6 @@ module.exports = grammar({
       field('function', $._expression),
       field('arguments', $.arguments),
       optional(choice($.optional_specifier, $.call_chain_expression)),
-      optional(';'),
     ))),
 
     call_chain_expression: $ => field('value', seq('[', $._expression, ']')),
@@ -297,13 +305,10 @@ module.exports = grammar({
       $._expression
     ),
 
-    _top_level_declaration: $ => choice(
-      $.function_declaration,
-    ),
-
     _type: $ => choice(
       $.array_type,
       $._type_identifier,
+      $.function_return_type,
       alias(choice(...primitive_types), $.primitive_type)
     ),
 
@@ -312,6 +317,12 @@ module.exports = grammar({
       field('element', $._type),
       ']'
     ),
+
+    // Not using $.identifier here due to https://github.com/tree-sitter/tree-sitter/issues/449
+    function_return_type: $ => token(seq(
+      identifier,
+      repeat1(seq('::', identifier))
+    )),
 
     let_declaration: $ => prec.left(seq(
       'let',
@@ -376,8 +387,14 @@ module.exports = grammar({
 
     field_declaration_list: $ => seq(
       '{',
-        optional(repeat(seq($.field_declaration, choice(',','\n')))),
-        optional($.function_declaration),
+        optional(
+          repeat(
+            choice(
+              seq($.field_declaration, optional(choice(',','\n'))),
+              $.function_declaration,
+            )
+          )
+        ),
       '}'
     ),
 
@@ -606,10 +623,10 @@ module.exports = grammar({
 
     throws_specifier: $ => seq('throws'),
 
-    return_expression: $ => seq(
+    return_expression: $ => prec.right(seq(
       '=>',
       $._expression,
-    ),
+    )),
 
     parameters: $ => seq(
       '(',
@@ -624,6 +641,8 @@ module.exports = grammar({
 
     this_specifier: $ => seq('this'),
 
+    this_specifier_shorthand: $ => seq('.', $.identifier),
+
     parameter: $ => seq(
       optional($.anonymous_specifier),
       field('pattern', choice(
@@ -637,7 +656,7 @@ module.exports = grammar({
 
     block: $ => seq(
       '{',
-      repeat($._statement),
+      repeat(seq($._statement, optional(terminator))),
       '}'
     ),
 
@@ -667,7 +686,7 @@ module.exports = grammar({
       '//', /.*/
     )),
 
-    identifier: $ => /[_\p{XID_Start}][_\p{XID_Continue}]*/,
+    identifier: $ => identifier,
     _type_identifier: $ => alias($.identifier, $.type_identifier),
   }
 });
