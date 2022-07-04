@@ -25,12 +25,41 @@ import re
 from dataclasses import dataclass
 from datetime import date
 import fileinput
+import hashlib
+import sys
+from typing import Any
+from types import SimpleNamespace
+from enum import Enum
 
 import typer
+import tomli
+from serde import serde, serialize, field, SerdeSkip
+from serde.toml import to_toml
+
+app = typer.Typer()
+update_app = typer.Typer()
+state_app = typer.Typer()
+app.add_typer(update_app, name="update")
+update_app.add_typer(state_app, name="state")
 
 from rich.console import Console
+from rich.table import Table
+from rich.style import Style
 
 console = Console()
+
+state_file = pathlib.Path(pathlib.Path(__file__).parent, "state.toml")
+corpus_tests_path = pathlib.Path(__file__, "..", "..", "test", "corpus").resolve()
+
+corpus_test_header_pattern: str = r"=+\n(.*)\n=+\n\s+"
+
+
+class TestImplemented(Enum):
+    """Enum with variants for test completion status."""
+
+    UNIMPLEMENTED = 0
+    IMPLEMENTED = 1
+    PARTIAL = 2
 
 
 def build_test_list(jakt_path: str) -> list:
@@ -56,21 +85,14 @@ def build_test_list(jakt_path: str) -> list:
 def build_corpus_list() -> dict[str, list]:
     """Builds a list of corpus tests."""
     list_of_tests: dict[str, list] = {}
-    pattern: str = r"=+\n(.*)\n=+\n\s+"
-    for root, _, files in os.walk(pathlib.Path("test", "corpus"), topdown=True):
+    for root, _, files in os.walk(corpus_tests_path, topdown=True):
         for name in files:
             file_path = pathlib.Path(root, name)
             file_path_posix = file_path.as_posix()
             file_text = file_path.read_text()
-
             # Strip out scheme comments
-            #
-            # WARNING: This will strip all semicolons out of the text, but that's okay because we
-            #          are only looking for tree-sitter test "headers"
-            #
             stripped_text = file_text.replace("; ", "").replace(";", "")
-
-            for x in re.findall(pattern, stripped_text):
+            for x in re.findall(corpus_test_header_pattern, stripped_text):
                 if not file_path_posix in list_of_tests:
                     list_of_tests[file_path_posix] = []
                 list_of_tests[file_path_posix].append(x)
@@ -84,7 +106,7 @@ def convert_jakt_sample_path_to_ts_path(jakt_sample: pathlib.Path) -> pathlib.Pa
         *jakt_sample.parts[jakt_sample.parts.index("samples") + 1 :],
     )
     return pathlib.Path(
-        "test", "corpus", ts_test_expect.as_posix().replace(".jakt", ".txt")
+        corpus_tests_path, ts_test_expect.as_posix().replace(".jakt", ".txt")
     )
 
 
@@ -95,11 +117,14 @@ def calculate_tests_completed(
 
     Returns a tuple of (count_tree_sitter_tests, jakt_samples, percentage_complete).
     """
-    count = 0
+    count: float = 0
     for jakt_test in jakt_tests:
+        console.log(jakt_test)
         ts_test_expect_actual = convert_jakt_sample_path_to_ts_path(jakt_test)
         ts_test_str_path = ts_test_expect_actual.as_posix()
+        console.log(ts_test_str_path)
         if ts_test_str_path in tree_sitter_tests:
+            console.log(ts_test_str_path)
             num_tests_implemented = len(tree_sitter_tests[ts_test_str_path])
             num_tests_not_implemented = 0
             for test in tree_sitter_tests[ts_test_str_path]:
@@ -108,9 +133,6 @@ def calculate_tests_completed(
             if num_tests_not_implemented == 0:
                 count += 1
             else:
-                console.log(ts_test_str_path)
-                console.log(jakt_test)
-                console.log(tree_sitter_tests[ts_test_str_path])
                 count += (
                     num_tests_implemented - num_tests_not_implemented
                 ) / num_tests_implemented
@@ -118,11 +140,11 @@ def calculate_tests_completed(
     return (count, num_tests, (count / num_tests) * 100)
 
 
-def update_readme(tree_sitter_tests: dict[str, list], jakt_tests: list):
+def _update_readme(tree_sitter_tests: dict[str, list], jakt_tests: list):
     """Updates the main tree-sitter-jakt readme with percent completed."""
     count, num_tests, perc = calculate_tests_completed(tree_sitter_tests, jakt_tests)
     date_now = date.today().strftime("%B %-d, %Y")
-    perc_line = f"tree-sitter-jakt implements {count:.2f} of {num_tests} ({perc:.1f}%) of the Jakt samples as of {date_now}"
+    perc_line = f"tree-sitter-jakt implements {count:.2f} of {num_tests} ({perc:.1f}%) of valid Jakt samples as of {date_now}"
     console.log(f"New percentage line: '{perc_line}'")
     with fileinput.input(pathlib.Path("README.md"), inplace=True) as f:
         for line in f:
@@ -132,30 +154,344 @@ def update_readme(tree_sitter_tests: dict[str, list], jakt_tests: list):
                 print(line, end="")
 
 
-def roadmap_table() -> str:
-    """Outputs a ghm table with the roadmap data."""
-    return ""
+def serializer(cls: Any, o: Any):
+    if cls is pathlib.Path:
+        if ".txt" in str(o):
+            return str(o.relative_to(os.getcwd()))
+        elif ".jakt" in str(o):
+            samples_index = o.parts.index("samples")
+            return str(pathlib.Path(*o.parts[samples_index:]))
+    else:
+        raise SerdeSkip()
 
 
-@dataclass(frozen=True, repr=True)
-class TestMap:
+@serde(serializer=serializer)
+@dataclass
+class Test:
+    """A tree sitter test and corresponding Jakt sample."""
+
     name: str
-    implemented: bool
-    corpus_file_path: str
-    jakt_sample_path: str
+    corpus_file_path: pathlib.Path
+    jakt_sample_path: pathlib.Path
     jakt_sample_hash: str
+    implemented: TestImplemented
+    changed: bool = field(metadata={"serde_skip": True})
+    deleted: bool = field(metadata={"serde_skip": True})
+    new: bool = field(metadata={"serde_skip": True})
+    falty: bool = field(metadata={"serde_skip": True})
+
+    def jakt_sample_path_to_expected_corpus_path(self) -> pathlib.Path:
+        """Converts a jakt sample path to a tree-sitter corpus test path."""
+        ts_test_expect = pathlib.Path(
+            *self.jakt_sample_path.parts[
+                self.jakt_sample_path.parts.index("samples") + 1 :
+            ],
+        )
+        return pathlib.Path(
+            corpus_tests_path, ts_test_expect.as_posix().replace(".jakt", ".txt")
+        )
+
+    def is_fully_implemented(self) -> TestImplemented:
+        """Returns true if the corpus test does not contain 'NOT IMPLEMENTED' tests."""
+        # Strip out scheme comments
+        if not self.corpus_file_path.exists():
+            return TestImplemented(0)
+        stripped_text = (
+            self.corpus_file_path.read_text().replace("; ", "").replace(";", "")
+        )
+        num_tests_not_implemented = 0
+        for x in re.findall(corpus_test_header_pattern, stripped_text):
+            if "NOT IMPLEMENTED" in x:
+                num_tests_not_implemented += 1
+        if num_tests_not_implemented == 0:
+            return TestImplemented(1)
+        elif num_tests_not_implemented > 0:
+            return TestImplemented(2)
+        return TestImplemented(0)
 
 
-def main(
+@serialize
+@dataclass
+class TestMap:
+    """A list of jakt samples to test"""
+
+    map: list[Test]
+
+    def get_by_corpus_path(self, path: str) -> Test | None:
+        """Returns Test if path is contained in a test"""
+        for x in self.map:
+            if path in str(x.corpus_file_path):
+                return x
+        return None
+
+    def get_by_jakt_sample_path(self, path: str) -> Test | None:
+        """Returns boolean if path is contained in a test"""
+        for x in self.map:
+            if path in str(x.jakt_sample_path):
+                return x
+        return None
+
+    def has_new_tests(self) -> bool:
+        """Returns true if any of the tests are new."""
+        for x in self.map:
+            if x.new:
+                return True
+        return False
+
+    def has_deleted_tests(self) -> bool:
+        """Returns true if any of the tests are deleted."""
+        for x in self.map:
+            if x.deleted:
+                return True
+        return False
+
+    def has_changed_tests(self) -> bool:
+        """Returns true if any of the tests are changed."""
+        for x in self.map:
+            if x.changed:
+                return True
+        return False
+
+
+# FIXME: user serializer function to create pathlib objs
+def load_state_file(jakt_path: str) -> TestMap:
+    """Deserialize toml state file and rebuild the TestMap"""
+    files = tomli.loads(state_file.read_text())
+    filezm = TestMap(map=[])
+    for test in files["map"]:
+        filezm.map.append(
+            Test(
+                name=test["name"],
+                implemented=test["implemented"],
+                corpus_file_path=pathlib.Path(os.getcwd(), test["corpus_file_path"]),
+                jakt_sample_path=pathlib.Path(jakt_path, test["jakt_sample_path"]),
+                jakt_sample_hash=test["jakt_sample_hash"],
+                changed=False,
+                new=False,
+                deleted=False,
+                falty=False,
+            )
+        )
+    return filezm
+
+
+def write_state_file(map: TestMap) -> bool:
+    """Serialize map into the state file"""
+    with open(state_file, "wb") as f:
+        f.write(str.encode(to_toml(map)))
+    return True
+
+
+def build_test_map(jakt_path: str) -> TestMap:
+    """Create a list of jakt samples"""
+    filez = TestMap(map=[])
+    for root, _, files in os.walk(pathlib.Path(jakt_path, "samples"), topdown=True):
+        for name in files:
+            file_path = pathlib.Path(root, name)
+            file_text = file_path.read_text()
+            hash = hashlib.md5(file_text.encode("utf-8")).hexdigest()
+            falty = False
+            if "/// - error:" in file_text:
+                falty = True
+            filez.map.append(
+                Test(
+                    name=name,
+                    corpus_file_path=convert_jakt_sample_path_to_ts_path(file_path),
+                    jakt_sample_path=file_path,
+                    jakt_sample_hash=hash,
+                    implemented=TestImplemented(0),
+                    changed=False,
+                    new=False,
+                    deleted=False,
+                    falty=falty,
+                )
+            )
+    return filez
+
+
+@app.command()
+def check(
     jakt_path: str = typer.Option(
         ..., help="The path to the Jakt source code containing the samples directory"
     )
 ):
-    """A tool for keeping track of Jakt parsing implementation."""
-    jakt_tests = build_test_list(jakt_path)
+    """Check for jakt samples changes"""
+    state_file_loaded: bool = False
+
+    # The samples dir in the jakt project directory is the single source of truth (SSOT)
+    ssot = build_test_map(jakt_path)
+    if not state_file.exists():
+        write_state_file(ssot)
+        sf = ssot
+    else:
+        state_file_loaded = True
+        sf = load_state_file(jakt_path)
+
+    corpus_list = build_corpus_list()
+
+    # We'll show this to the user to report results of three-way merge
+    merged_map = TestMap(map=[])
+
+    for test in ssot.map:
+        if (
+            corpus_path := convert_jakt_sample_path_to_ts_path(test.jakt_sample_path)
+        ).as_posix() in corpus_list:
+            test.implemented = test.is_fully_implemented()
+            test.corpus_file_path = corpus_path
+        if state_file_loaded:
+            # if we have a state file, we now have to resolve the differences...
+            sf_equiv = sf.get_by_jakt_sample_path(str(test.jakt_sample_path))
+            if not sf_equiv:
+                test.new = True
+                merged_map.map.append(test)
+                continue
+            elif test.jakt_sample_hash != sf_equiv.jakt_sample_hash:
+                test.changed = True
+                merged_map.map.append(test)
+                continue
+        merged_map.map.append(test)
+
+    for test in sf.map:
+        # check for files in the state file that are no longer in the SSOT
+        # if any are missing, then they are marked as deleted
+        if not ssot.get_by_jakt_sample_path(str(test.jakt_sample_path)):
+            test.deleted = True
+            merged_map.map.append(test)
+
+    # print table of changes
+    print_testmap_table(merged_map)
+
+
+def print_testmap_table(tests: TestMap):
+    """Print a pretty table of state changes"""
+    table = Table(show_header=True, header_style="bold magenta")
+
+    table.add_column("#")
+    table.add_column("MD5")
+    table.add_column("Expected Corpus Path", justify="left")
+    table.add_column("Done", justify="center")
+
+    if tests.has_changed_tests():
+        table.add_column("Changed", justify="center")
+
+    if tests.has_new_tests():
+        table.add_column("New", justify="center")
+
+    if tests.has_deleted_tests():
+        table.add_column("Deleted", justify="center")
+
+    table.add_column("Falty", justify="center")
+
+    falty_count = 0
+    implemented_count = 0
+
+    for num, test in enumerate(tests.map):
+        corpus_path = test.corpus_file_path
+        corpus_path_mod = corpus_path.parts[corpus_path.parts.index("corpus") :]
+        color: Style = Style(color=None)
+
+        renderables: list = [
+            str(num + 1),
+            test.jakt_sample_hash,
+            str(pathlib.Path(*corpus_path_mod)),
+        ]
+
+        if test.implemented == TestImplemented.IMPLEMENTED:
+            color = Style(color="blue")
+            renderables.append(":ballot_box_with_check:")
+            implemented_count += 1
+        elif test.implemented == TestImplemented.PARTIAL:
+            color = Style(color="pale_turquoise1")
+            renderables.append("(partial)")
+        else:
+            renderables.append("")
+
+        if test.changed and test.implemented == TestImplemented.IMPLEMENTED:
+            color = Style(color="yellow")
+            renderables.append(":ballot_box_with_check:")
+        elif test.changed:
+            color = Style(color="wheat1")
+            renderables.append(":ballot_box_with_check:")
+        elif any(str(x.header) in "Changed" for x in table.columns):
+            renderables.append("")
+
+        if test.new:
+            color = Style(color="green")
+            renderables.append(":ballot_box_with_check:")
+        elif test.deleted:
+            color = Style(color="red")
+            renderables.append(":ballot_box_with_check:")
+
+        if test.falty:
+            color = Style(color=None, dim=True)
+            falty_count += 1
+            renderables.append(":ballot_box_with_check:")
+
+        table.add_row(*renderables, style=color)
+
+    console.log(table)
+    console.log(f"Total tests: {len(tests.map)}")
+    console.log(f"Falty tests: {falty_count}")
+    console.log(f"Parsable tests: {len(tests.map) - falty_count}")
+    console.log(f"Implemented tests: {implemented_count}")
+    console.log("[yellow][bold]WARNING[/yellow] - state file is unsaved[/bold]")
+
+
+@update_app.callback()
+def update(
+    ctx: typer.Context,
+    jakt_path: str = typer.Option(
+        ..., help="The path to the Jakt source code containing the samples directory"
+    ),
+):
+    ctx.obj = SimpleNamespace(jakt_path=jakt_path)
+
+
+@update_app.command("readme")
+def update_readme(ctx: typer.Context):
+    """Update the README with percentage completed"""
+    jakt_tests = build_test_list(ctx.obj.jakt_path)
     ts_tests = build_corpus_list()
-    update_readme(ts_tests, jakt_tests)
+    _update_readme(ts_tests, jakt_tests)
+
+
+@state_app.command("single")
+def update_test(
+    ctx: typer.Context,
+    path: str = typer.Option("", help="Update a test using the corpus path"),
+):
+    """Update the Jakt sample state for a single test."""
+
+    if not state_file.exists():
+        console.log(f"[red][ERROR] - State file {state_file} does not exist![/red]")
+        sys.exit(1)
+    sf = load_state_file(ctx.obj.jakt_path)
+
+    if not (test := sf.get_by_corpus_path(path)):
+        console.log(f"[red][ERROR] - '{path}' not found in state file![/red]")
+        sys.exit(1)
+
+    if path:
+        console.log(f"Updating state of single test: '{path}'")
+        console.log(f"jakt sample path: '{test.jakt_sample_path}'")
+        console.log(f"Old hash: {test.jakt_sample_hash}")
+        hash = hashlib.md5(
+            test.jakt_sample_path.read_text().encode("utf-8")
+        ).hexdigest()
+        test.jakt_sample_hash = hash
+        console.log(f"New hash: {test.jakt_sample_hash}")
+        write_state_file(sf)
+
+
+@state_app.command("all")
+def update_state_all(ctx: typer.Context):
+    """Update the Jakt sample state for all tests."""
+    write_state_file(build_test_map(ctx.obj.jakt_path))  # type: ignore
+    console.log("state file updated")
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    console.log(
+        "[bold][yellow]WARNING[/yellow]: this script assumes tests are in passing state[/bold]"
+    )
+    app()

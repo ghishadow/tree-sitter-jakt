@@ -65,7 +65,7 @@ enum SimpleWithStructType {
     (enum_variant_list
       (enum_variant
         (identifier)
-        (field_declaration_list
+        (ordered_field_declaration_list
           (field_declaration
             (field_identifier)
             (primitive_type))
@@ -76,31 +76,6 @@ enum SimpleWithStructType {
         (identifier)
         (ordered_field_declaration_list
           (primitive_type))))))
-
-================================================================================
-Simple enum with mixed variants
-================================================================================
-
-enum SimpleWithStructType {
-    A
-    B(i32)
-    C
-}
-
---------------------------------------------------------------------------------
-
-(source_file
-  (enum_declaration
-    (type_identifier)
-    (enum_variant_list
-      (enum_variant
-        (identifier))
-      (enum_variant
-        (identifier)
-        (ordered_field_declaration_list
-          (primitive_type)))
-      (enum_variant
-        (identifier)))))
 
 ; ================================================================================
 ; NOT IMPLEMENTED Simple enum with Type Parameter

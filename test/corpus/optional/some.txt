@@ -1,0 +1,29 @@
+================================================================================
+Optional some
+================================================================================
+
+function main() {
+    let i = Some(5)
+    println("{}", i ?? 0)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (call_expression
+          (identifier)
+          (arguments
+            (integer_literal))))
+      (call_expression
+        (identifier)
+        (arguments
+          (string_literal)
+          (optional_expression
+            (identifier)
+            (integer_literal)))))))
