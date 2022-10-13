@@ -1,0 +1,39 @@
+================================================================================
+Classes method
+================================================================================
+
+class Person {
+    public name: String
+    public age: i64
+
+    public function birthday(mut this) {
+        ++this.age
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (class_declaration
+    (type_identifier)
+    (field_declaration_list
+      (field_declaration
+        (visibility_specifier)
+        (field_identifier)
+        (primitive_type))
+      (field_declaration
+        (visibility_specifier)
+        (field_identifier)
+        (primitive_type))
+      (function_declaration
+        (visibility_specifier)
+        (identifier)
+        (parameters
+          (this_parameter
+            (mutable_specifier)
+            (this_reference)))
+        (block
+          (field_expression
+            (update_expression
+              (identifier))
+            (field_identifier)))))))

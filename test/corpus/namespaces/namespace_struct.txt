@@ -31,13 +31,17 @@ namespace Greeters {
           (function_declaration
             (identifier)
             (parameters
-              (this_specifier))
+              (this_parameter
+                (this_reference)))
             (block
               (call_expression
                 (identifier)
                 (arguments
-                  (string_literal)
-                  (this_specifier_shorthand
-                    (identifier))
-                  (this_specifier_shorthand
-                    (identifier)))))))))))
+                  (argument
+                    (string_literal))
+                  (argument
+                    (this_reference_shorthand
+                      (identifier)))
+                  (argument
+                    (this_reference_shorthand
+                      (identifier))))))))))))

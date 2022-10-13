@@ -13,38 +13,42 @@ println("{}", s.to_string())
 
 (source_file
   (mutable_declaration
+    (mutable_specifier)
     (identifier)
-    (call_expression
-      (static_member_expression
-        (identifier)
-        (field_identifier))
+    (static_call_expression
+      (scoped_identifier)
+      (field_identifier)
       (arguments)))
   (call_expression
     (field_expression
       (identifier)
       (field_identifier))
     (arguments
-      (call_expression
-        (field_expression
-          (string_literal)
-          (field_identifier))
-        (arguments))))
+      (argument
+        (call_expression
+          (field_expression
+            (string_literal)
+            (field_identifier))
+          (arguments)))))
   (call_expression
     (field_expression
       (identifier)
       (field_identifier))
     (arguments
-      (call_expression
-        (field_expression
-          (string_literal)
-          (field_identifier))
-        (arguments))))
+      (argument
+        (call_expression
+          (field_expression
+            (string_literal)
+            (field_identifier))
+          (arguments)))))
   (call_expression
     (identifier)
     (arguments
-      (string_literal)
-      (call_expression
-        (field_expression
-          (identifier)
-          (field_identifier))
-        (arguments)))))
+      (argument
+        (string_literal))
+      (argument
+        (call_expression
+          (field_expression
+            (identifier)
+            (field_identifier))
+          (arguments))))))

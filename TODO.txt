@@ -1,39 +1,6 @@
-* change Foo::boo::bar() to "scoped_identifier" instead of "static_member_expression"
+* corpus tests for jakt samples should have one per file
 
-  [FIXED] The syntax highlighting is broken for this in jakt...
-
-  Foo::boo::bar();
-
-  Is
-
-  ```
-  source_file [0, 0] - [1, 0]
-    call_expression [0, 0] - [0, 15]
-      function: scoped_identifier [0, 0] - [0, 13]
-        path: scoped_identifier [0, 0] - [0, 8]
-          path: identifier [0, 0] - [0, 3]
-          name: identifier [0, 5] - [0, 8]
-        name: identifier [0, 10] - [0, 13]
-      arguments: arguments [0, 13] - [0, 15]
-  ```
-
-  in rust, which I think is more accurate and can also apply to Jakt.
-
-* remove or add '_' to the rules
-
-    A standard is needed for consistency.
-
-    I am unsure why many TS parsers prepend '_' to begin with...
-
-* roadmapgen.py
-    * allow viwing original tests in check table
-    * allow saving check table to markdown table
-
-* change static_member_expression to static_call_expression (maybe?)
-
-    I'm not sure what the C++ feature is called...
-
-* add tests for optional types
+    Any extra tests should be considered "original"
 
 * submit queries to https://github.com/nvim-treesitter/nvim-treesitter
 
@@ -49,7 +16,7 @@
 * get github to syntax highlight Jakt on Github
 
     Mentions tree-sitter https://github.com/github/linguist/issues/5844
-    
+
     How to add a new grammar to github: https://github.com/github/linguist/blob/master/CONTRIBUTING.md#adding-a-language
 
     1. A grammar will only be added to github after it has been used by 200 unique users and projects

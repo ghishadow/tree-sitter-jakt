@@ -24,12 +24,13 @@ struct Rectangle {
       (function_declaration
         (identifier)
         (parameters
-          (this_specifier))
+          (this_parameter
+            (this_reference)))
         (return_expression
           (binary_expression
             (field_expression
-              (this_specifier)
+              (this_reference)
               (field_identifier))
             (field_expression
-              (this_specifier)
+              (this_reference)
               (field_identifier))))))))

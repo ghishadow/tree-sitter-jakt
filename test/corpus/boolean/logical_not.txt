@@ -21,23 +21,26 @@ function main() {
     (parameters)
     (block
       (if_statement
-        (logical_not
-          (binary_expression
-            (integer_literal)
-            (integer_literal)))
+        (logical_expression
+          (parenthesized_expression
+            (binary_expression
+              (integer_literal)
+              (integer_literal))))
         (block
           (call_expression
             (identifier)
             (arguments
-              (string_literal)))))
+              (argument
+                (string_literal))))))
       (let_declaration
         (identifier)
         (boolean_literal))
       (if_statement
-        (logical_not
+        (logical_expression
           (identifier))
         (block
           (call_expression
             (identifier)
             (arguments
-              (string_literal))))))))
+              (argument
+                (string_literal)))))))))

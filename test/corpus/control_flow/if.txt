@@ -10,9 +10,11 @@ if (true) {
 
 (source_file
   (if_statement
-    (boolean_literal)
+    (parenthesized_expression
+      (boolean_literal))
     (block
       (call_expression
         (identifier)
         (arguments
-          (string_literal))))))
+          (argument
+            (string_literal)))))))

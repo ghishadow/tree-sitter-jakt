@@ -1,0 +1,63 @@
+================================================================================
+Generics basic generic function
+================================================================================
+
+function do_pop<T>(anon mut arr: [T]) -> Optional<T> {
+  return arr.pop()
+}
+
+function main() {
+  mut arr = [1, 2, 3];
+
+  println("{}", do_pop(arr)!)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (generic_function_declaration
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)))
+    (parameters
+      (parameter
+        (anonymous_specifier)
+        (mutable_specifier)
+        (identifier)
+        (array_type
+          (type_identifier))))
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)))
+    (block
+      (return_statement
+        (call_expression
+          (field_expression
+            (identifier)
+            (field_identifier))
+          (arguments)))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (mutable_declaration
+        (mutable_specifier)
+        (identifier)
+        (array_literal
+          (integer_literal)
+          (integer_literal)
+          (integer_literal)))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (optional_value_expression
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (identifier)))))))))))

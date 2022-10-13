@@ -11,15 +11,18 @@ while (x > 0) {
 
 (source_file
   (while_statement
-    (binary_expression
-      (identifier)
-      (integer_literal))
+    (parenthesized_expression
+      (binary_expression
+        (identifier)
+        (integer_literal)))
     (block
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (identifier)))
+          (argument
+            (string_literal))
+          (argument
+            (identifier))))
       (assignment_expression
         (identifier)
         (binary_expression

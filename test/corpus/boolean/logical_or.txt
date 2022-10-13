@@ -25,7 +25,7 @@ function main() {
         (identifier)
         (integer_literal))
       (if_statement
-        (binary_expression
+        (logical_expression
           (binary_expression
             (identifier)
             (integer_literal))
@@ -36,7 +36,8 @@ function main() {
           (call_expression
             (identifier)
             (arguments
-              (string_literal)))))
+              (argument
+                (string_literal))))))
       (let_declaration
         (identifier)
         (boolean_literal))
@@ -44,11 +45,12 @@ function main() {
         (identifier)
         (boolean_literal))
       (if_statement
-        (binary_expression
+        (logical_expression
           (identifier)
           (identifier))
         (block
           (call_expression
             (identifier)
             (arguments
-              (string_literal))))))))
+              (argument
+                (string_literal)))))))))

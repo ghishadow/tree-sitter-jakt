@@ -27,36 +27,41 @@ function main() {
     (block
       (let_declaration
         (identifier)
-        (primitive_type)
-        (optional_specifier)
+        (optional_type
+          (primitive_type))
         (string_literal))
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (optional_expression
-            (identifier)
-            (string_literal))))
+          (argument
+            (string_literal))
+          (argument
+            (optional_expression
+              (identifier)
+              (string_literal)))))
       (let_declaration
         (identifier)
-        (primitive_type)
-        (optional_specifier)
+        (optional_type
+          (primitive_type))
         (none_expression))
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (optional_expression
-            (identifier)
-            (string_literal))))
+          (argument
+            (string_literal))
+          (argument
+            (optional_expression
+              (identifier)
+              (string_literal)))))
       (line_comment)
       (mutable_declaration
+        (mutable_specifier)
         (identifier)
         (integer_literal))
       (let_declaration
         (identifier)
-        (primitive_type)
-        (optional_specifier)
+        (optional_type
+          (primitive_type))
         (integer_literal))
       (let_declaration
         (identifier)
@@ -67,5 +72,7 @@ function main() {
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (identifier))))))
+          (argument
+            (string_literal))
+          (argument
+            (identifier)))))))

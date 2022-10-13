@@ -1,0 +1,23 @@
+================================================================================
+Namespace return type
+================================================================================
+
+return Foo::Bar::Biz(a: 10)
+return JsonValue::Null
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (return_statement
+    (namespace_call_expression
+      (scoped_identifier)
+      (scoped_identifier)
+      (field_identifier)
+      (arguments
+        (argument
+          (identifier)
+          (integer_literal)))))
+  (return_statement
+    (namespace_scope_expression
+      (scoped_identifier)
+      (field_identifier))))

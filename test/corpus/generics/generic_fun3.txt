@@ -1,0 +1,46 @@
+================================================================================
+Generics generic fun 3
+================================================================================
+
+function id<T>(anon x: T) -> T {
+    return x;
+}
+
+function main() {
+    println("{}", id(3) + 100)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (generic_function_declaration
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)))
+    (parameters
+      (parameter
+        (anonymous_specifier)
+        (identifier)
+        (type_identifier)))
+    (type_identifier)
+    (block
+      (return_statement
+        (identifier))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (binary_expression
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (integer_literal))))
+              (integer_literal))))))))

@@ -1,4 +1,3 @@
-
 ================================================================================
 Arrays shorthand optional
 ================================================================================
@@ -21,15 +20,15 @@ function main() {
     (block
       (let_declaration
         (identifier)
-        (array_type
-          (primitive_type))
-        (optional_specifier)
+        (optional_type
+          (array_type
+            (primitive_type)))
         (none_expression))
       (let_declaration
         (identifier)
-        (array_type
-          (primitive_type))
-        (optional_specifier)
+        (optional_type
+          (array_type
+            (primitive_type)))
         (array_literal
           (integer_literal)
           (integer_literal)
@@ -37,29 +36,106 @@ function main() {
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (call_expression
-            (field_expression
-              (identifier)
-              (field_identifier))
-            (arguments))))
+          (argument
+            (string_literal))
+          (argument
+            (call_expression
+              (field_expression
+                (identifier)
+                (field_identifier))
+              (arguments)))))
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (call_expression
-            (field_expression
-              (identifier)
-              (field_identifier))
-            (arguments))))
+          (argument
+            (string_literal))
+          (argument
+            (call_expression
+              (field_expression
+                (identifier)
+                (field_identifier))
+              (arguments)))))
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (call_expression
-            (field_expression
-              (identifier)
-              (field_identifier))
-            (arguments)
-            (call_chain_expression
+          (argument
+            (string_literal))
+          (argument
+            (array_expression
+              (call_expression
+                (field_expression
+                  (identifier)
+                  (field_identifier))
+                (arguments))
+              (integer_literal))))))))
+
+================================================================================
+Arrays shorthand optional (expressive)
+================================================================================
+
+function main() {
+    let a: [i64]? = None
+    let b: [i64]? = [1 2 3]
+
+    println("{}", a.has_value())
+    println("{}", b.has_value())
+    println("{}", b.value() [2])
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (optional_type
+          (array_type
+            (primitive_type)))
+        (none_expression))
+      (let_declaration
+        (identifier)
+        (optional_type
+          (array_type
+            (primitive_type)))
+        (array_literal
+          (integer_literal)
+          (integer_literal)
+          (integer_literal)))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (call_expression
+              (field_expression
+                (identifier)
+                (field_identifier))
+              (arguments)))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (call_expression
+              (field_expression
+                (identifier)
+                (field_identifier))
+              (arguments)))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (array_expression
+              (call_expression
+                (field_expression
+                  (identifier)
+                  (field_identifier))
+                (arguments))
               (integer_literal))))))))

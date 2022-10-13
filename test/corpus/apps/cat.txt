@@ -1,0 +1,107 @@
+================================================================================
+Apps cat sys open
+================================================================================
+
+function main(args: [String]) {
+    if args.size() <= 1 {
+        eprintln("usage: cat <path>")
+        return 1
+    }
+
+    let filename = args[1]
+
+    mut file = fopen(filename.c_string(), "r".c_string())
+    defer fclose(file)
+
+    mut c = fgetc(file)
+    while feof(file) == 0 {
+        putchar(c)
+        c = fgetc(file)
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (array_type
+          (primitive_type))))
+    (block
+      (if_statement
+        (binary_expression
+          (call_expression
+            (field_expression
+              (identifier)
+              (field_identifier))
+            (arguments))
+          (integer_literal))
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))
+          (return_statement
+            (integer_literal))))
+      (let_declaration
+        (identifier)
+        (array_expression
+          (identifier)
+          (integer_literal)))
+      (mutable_declaration
+        (mutable_specifier)
+        (identifier)
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (call_expression
+                (field_expression
+                  (identifier)
+                  (field_identifier))
+                (arguments)))
+            (argument
+              (call_expression
+                (field_expression
+                  (string_literal)
+                  (field_identifier))
+                (arguments))))))
+      (defer_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))
+      (mutable_declaration
+        (mutable_specifier)
+        (identifier)
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))
+      (while_statement
+        (binary_expression
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (identifier))))
+          (integer_literal))
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (identifier))))
+          (assignment_expression
+            (identifier)
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier))))))))))

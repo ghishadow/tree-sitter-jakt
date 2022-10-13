@@ -24,17 +24,20 @@ function main() {
         (primitive_type)
         (integer_literal))
       (if_statement
-        (binary_expression
-          (identifier)
-          (integer_literal))
+        (parenthesized_expression
+          (binary_expression
+            (identifier)
+            (integer_literal)))
         (block
           (call_expression
             (identifier)
             (arguments
-              (string_literal))))
+              (argument
+                (string_literal)))))
         (else_clause
           (block
             (call_expression
               (identifier)
               (arguments
-                (string_literal)))))))))
+                (argument
+                  (string_literal))))))))))

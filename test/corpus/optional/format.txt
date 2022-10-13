@@ -19,25 +19,28 @@ function main() {
     (field_declaration_list
       (field_declaration
         (field_identifier)
-        (primitive_type)
-        (optional_specifier))))
+        (optional_type
+          (primitive_type)))))
   (function_declaration
     (identifier)
     (parameters)
     (block
       (let_declaration
         (identifier)
-        (primitive_type)
-        (optional_specifier)
+        (optional_type
+          (primitive_type))
         (none_expression))
       (call_expression
         (identifier)
         (arguments
-          (string_literal)
-          (identifier)
-          (call_expression
-            (identifier)
-            (arguments
-              (argument
-                (identifier)
-                (integer_literal)))))))))
+          (argument
+            (string_literal))
+          (argument
+            (identifier))
+          (argument
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier)
+                  (integer_literal))))))))))

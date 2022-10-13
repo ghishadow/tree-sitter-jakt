@@ -1,0 +1,53 @@
+================================================================================
+Generics static with explicit types
+================================================================================
+
+struct Test {
+    function test<T>(foo: T) -> T {
+        return foo;
+    }
+}
+
+function main() {
+    println("{}", Test::test<i64>(foo: 1));
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (field_declaration_list
+      (generic_function_declaration
+        (generic_type
+          (identifier)
+          (generic_arguments
+            (type_identifier)))
+        (parameters
+          (parameter
+            (identifier)
+            (type_identifier)))
+        (type_identifier)
+        (block
+          (return_statement
+            (identifier))))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (static_call_expression
+              (scoped_identifier)
+              (generic_type
+                (identifier)
+                (generic_arguments
+                  (primitive_type)))
+              (arguments
+                (argument
+                  (identifier)
+                  (integer_literal))))))))))
