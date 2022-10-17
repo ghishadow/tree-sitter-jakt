@@ -27,7 +27,7 @@ from datetime import date
 import fileinput
 import hashlib
 import sys
-from typing import Any
+from typing import Any, Optional
 from types import SimpleNamespace
 from enum import Enum
 
@@ -45,6 +45,7 @@ update_app.add_typer(state_app, name="state")
 from rich.console import Console
 from rich.table import Table
 from rich.style import Style
+from rich import box
 
 console = Console()
 
@@ -73,6 +74,9 @@ def build_test_list(jakt_path: str) -> list:
     for root, _, files in os.walk(pathlib.Path(jakt_path, "samples"), topdown=True):
         for name in files:
             test_path = pathlib.Path(root, name)
+            if not ".jakt" in str(test_path):
+                console.log(f"Skipping file: {test_path}")
+                continue
             test = test_path.read_text()
             if "/// - error:" in test:
                 console.log(f"skipping failing test: {test_path.as_posix()}")
@@ -144,7 +148,7 @@ def _update_readme(tree_sitter_tests: dict[str, list], jakt_tests: list):
     """Updates the main tree-sitter-jakt readme with percent completed."""
     count, num_tests, perc = calculate_tests_completed(tree_sitter_tests, jakt_tests)
     date_now = date.today().strftime("%B %-d, %Y")
-    perc_line = f"tree-sitter-jakt implements {count:.2f} of {num_tests} ({perc:.1f}%) of valid Jakt samples as of {date_now}"
+    perc_line = f"tree-sitter-jakt implements {count:.2f} of {num_tests} ({perc:.1f}%) of passable Jakt samples as of {date_now}"
     console.log(f"New percentage line: '{perc_line}'")
     with fileinput.input(pathlib.Path("README.md"), inplace=True) as f:
         for line in f:
@@ -252,6 +256,14 @@ class TestMap:
                 return True
         return False
 
+    def remove_by_corpus_path(self, path: str) -> bool:
+        """Removes a test from map by corpus path"""
+        for index, x in enumerate(self.map):
+            if path in str(x.corpus_file_path):
+                del self.map[index]
+                return True
+        return False
+
 
 # FIXME: user serializer function to create pathlib objs
 def load_state_file(jakt_path: str) -> TestMap:
@@ -279,6 +291,7 @@ def write_state_file(map: TestMap) -> bool:
     """Serialize map into the state file"""
     with open(state_file, "wb") as f:
         f.write(str.encode(to_toml(map)))
+    console.log("state file updated")
     return True
 
 
@@ -288,6 +301,9 @@ def build_test_map(jakt_path: str) -> TestMap:
     for root, _, files in os.walk(pathlib.Path(jakt_path, "samples"), topdown=True):
         for name in files:
             file_path = pathlib.Path(root, name)
+            if not ".jakt" in str(file_path):
+                console.log(f"Skipping file: {file_path}")
+                continue
             file_text = file_path.read_text()
             hash = hashlib.md5(file_text.encode("utf-8")).hexdigest()
             falty = False
@@ -307,6 +323,37 @@ def build_test_map(jakt_path: str) -> TestMap:
                 )
             )
     return filez
+
+
+def test_from_corpus_path(corpus_path: str, jakt_path: str) -> Optional[Test]:
+    """Create a list of jakt samples"""
+    if ".jakt" in corpus_path:
+        console.log(f"Skipping file: {corpus_path}")
+        return
+    file_path = pathlib.Path(corpus_path)
+    stripped_corpus_path = file_path.parts[2:-1]
+    sample_path = pathlib.Path(
+        jakt_path,
+        "samples",
+        *stripped_corpus_path,
+        file_path.name.replace(".txt", ".jakt"),
+    )
+    file_text = sample_path.read_text()
+    hash = hashlib.md5(file_text.encode("utf-8")).hexdigest()
+    console.log(f"Hash: {hash}")
+    return Test(
+        name=sample_path.name,
+        corpus_file_path=file_path.absolute(),
+        jakt_sample_path=pathlib.Path(
+            *sample_path.parts[sample_path.parts.index("samples") :]
+        ).absolute(),
+        jakt_sample_hash=hash,
+        implemented=TestImplemented(0),
+        changed=False,
+        new=False,
+        deleted=False,
+        falty=False,
+    )
 
 
 @app.command()
@@ -359,10 +406,14 @@ def check(
             merged_map.map.append(test)
 
     # print table of changes
-    print_testmap_table(merged_map)
+    console.log("Tests that produce an error, skipping for now")
+    print_falty_testmap_table(merged_map)
+    console.log("Tests that are valid")
+    print_parsable_testmap_table(merged_map)
+    print_test_report(merged_map, corpus_list)
 
 
-def print_testmap_table(tests: TestMap):
+def print_parsable_testmap_table(tests: TestMap):
     """Print a pretty table of state changes"""
     table = Table(show_header=True, header_style="bold magenta")
 
@@ -380,12 +431,12 @@ def print_testmap_table(tests: TestMap):
     if tests.has_deleted_tests():
         table.add_column("Deleted", justify="center")
 
-    table.add_column("Falty", justify="center")
-
-    falty_count = 0
     implemented_count = 0
+    new_count = 0
 
     for num, test in enumerate(tests.map):
+        if test.falty:
+            continue
         corpus_path = test.corpus_file_path
         corpus_path_mod = corpus_path.parts[corpus_path.parts.index("corpus") :]
         color: Style = Style(color=None)
@@ -407,7 +458,7 @@ def print_testmap_table(tests: TestMap):
             renderables.append("")
 
         if test.changed and test.implemented == TestImplemented.IMPLEMENTED:
-            color = Style(color="yellow")
+            color = Style(color="red", blink=True, bold=True)
             renderables.append(":ballot_box_with_check:")
         elif test.changed:
             color = Style(color="wheat1")
@@ -418,23 +469,176 @@ def print_testmap_table(tests: TestMap):
         if test.new:
             color = Style(color="green")
             renderables.append(":ballot_box_with_check:")
-        elif test.deleted:
+            if not test.falty:
+                new_count += 1
+        elif any(str(x.header) in "New" for x in table.columns):
+            renderables.append("")
+
+        if test.deleted:
             color = Style(color="red")
             renderables.append(":ballot_box_with_check:")
+        elif any(str(x.header) in "Deleted" for x in table.columns):
+            renderables.append("")
+
+        table.add_row(*renderables, style=color)
+    console.log(table)
+
+
+def print_falty_testmap_table(tests: TestMap):
+    """Print a pretty table of state changes"""
+    table = Table(show_header=True, header_style="bold magenta")
+
+    table.add_column("#")
+    table.add_column("MD5")
+    table.add_column("Expected Corpus Path", justify="left")
+
+    table.add_column("Falty", justify="center")
+
+    if tests.has_new_tests():
+        table.add_column("New", justify="center")
+
+    if tests.has_deleted_tests():
+        table.add_column("Deleted", justify="center")
+
+    falty_count = 0
+    new_count = 0
+
+    for num, test in enumerate(tests.map):
+        if not test.falty:
+            continue
+        corpus_path = test.corpus_file_path
+        corpus_path_mod = corpus_path.parts[corpus_path.parts.index("corpus") :]
+        color: Style = Style(color=None)
+
+        renderables: list = [
+            str(num + 1),
+            test.jakt_sample_hash,
+            str(pathlib.Path(*corpus_path_mod)),
+        ]
 
         if test.falty:
             color = Style(color=None, dim=True)
             falty_count += 1
             renderables.append(":ballot_box_with_check:")
 
+        if test.new:
+            color = Style(color="green")
+            renderables.append(":ballot_box_with_check:")
+            if not test.falty:
+                new_count += 1
+        elif any(str(x.header) in "New" for x in table.columns):
+            renderables.append("")
+
+        if test.deleted:
+            color = Style(color="red")
+            renderables.append(":ballot_box_with_check:")
+        elif any(str(x.header) in "Deleted" for x in table.columns):
+            renderables.append("")
+
         table.add_row(*renderables, style=color)
+    console.log(table)
+
+
+def print_test_report(tests: TestMap, corpus_list: dict[str, list]):
+    """Print a pretty table of state changes"""
+    falty_count = 0
+    falty_new = 0
+    implemented_count = 0
+    new_count = 0
+    jakt_sample_count = 0
+    implemented_changed_count = 0
+    jakt_test_changed = 0
+    deleted = 0
+    for _, test in enumerate(tests.map):
+        jakt_sample_count += 1
+        if test.implemented == TestImplemented.IMPLEMENTED:
+            implemented_count += 1
+        if test.changed and test.implemented == TestImplemented.IMPLEMENTED:
+            implemented_changed_count += 1
+        elif test.changed:
+            if not test.falty:
+                jakt_test_changed += 1
+        if test.new:
+            if not test.falty:
+                new_count += 1
+            else:
+                falty_new += 1
+        if test.falty:
+            falty_count += 1
+        if test.deleted:
+            deleted += 1
+
+    original_test_count = count_original_tests(corpus_list)
+
+    table = Table(box=box.MINIMAL_DOUBLE_HEAD)
+    table.add_column("Count", justify="right")
+    table.add_column("Description", justify="left")
+    table.add_row(str(len(tests.map) + original_test_count), "Total Tests")
+    table.add_row(str(jakt_sample_count), "Total Jakt Samples")
+    table.add_row(str(original_test_count), "Total Original Tests")
+    table.add_row()
+    jakt_passable_tests = len(tests.map) - falty_count
+    table.add_row(str(jakt_passable_tests), "Jakt Passable Samples (no errors)")
+    if new_count > 0:
+        color = Style(color="green", bold=True)
+        table.add_row(
+            str(new_count),
+            "Jakt Passable Samples (New)",
+            style=color,
+        )
+    if jakt_test_changed > 0:
+        color = Style(color="yellow", bold=True)
+        table.add_row(
+            str(jakt_test_changed), "Jakt Passable Samples (Changed)", style=color
+        )
+    if implemented_changed_count > 0:
+        color = Style(color="red", bold=True)
+        table.add_row(
+            str(implemented_changed_count),
+            "Jakt Passable Implemented Samples (Changed)",
+            style=color,
+        )
+    table.add_row(str(implemented_count), "Jakt Implemented Passable Samples")
+    table.add_row()
+    total_tests = jakt_passable_tests + original_test_count
+    table.add_row(str(total_tests), "Total Passable Tests")
+    table.add_row(
+        str(implemented_count + original_test_count),
+        "Total Implemented Tests (including partially implemented and original tests)",
+    )
+    table.add_row(
+        f"{((implemented_count + original_test_count - jakt_test_changed) / total_tests) * 100:.0f}%",
+        "Percentage of Implemented Jakt Samples",
+    )
+    table.add_row()
+    table.add_row(
+        str(falty_count),
+        "Jakt Falty Samples (produce errors)",
+        style=Style(color=None, dim=True),
+    )
+    if falty_new > 0:
+        color = Style(color="green", dim=True)
+        table.add_row(
+            str(falty_new),
+            "Jakt Falty Samples (New)",
+            style=color,
+        )
+    if deleted > 0:
+        table.add_row()
+        color = Style(color="red", bold=True)
+        table.add_row(str(deleted), "Jakt Deleted Samples", style=color)
 
     console.log(table)
-    console.log(f"Total tests: {len(tests.map)}")
-    console.log(f"Falty tests: {falty_count}")
-    console.log(f"Parsable tests: {len(tests.map) - falty_count}")
-    console.log(f"Implemented tests: {implemented_count}")
     console.log("[yellow][bold]WARNING[/yellow] - state file is unsaved[/bold]")
+
+
+def count_original_tests(tests: dict[str, list]) -> int:
+    """Count the number of original tests."""
+    count = 0
+    for x, _ in tests.items():
+        if "original/" in x:
+            count += 1
+    return count
 
 
 @update_app.callback()
@@ -461,17 +665,32 @@ def update_test(
     path: str = typer.Option("", help="Update a test using the corpus path"),
 ):
     """Update the Jakt sample state for a single test."""
-
     if not state_file.exists():
         console.log(f"[red][ERROR] - State file {state_file} does not exist![/red]")
         sys.exit(1)
+
     sf = load_state_file(ctx.obj.jakt_path)
 
     if not (test := sf.get_by_corpus_path(path)):
-        console.log(f"[red][ERROR] - '{path}' not found in state file![/red]")
-        sys.exit(1)
-
-    if path:
+        console.log(f"Adding single test to state file for '{path}'")
+        if not (new_test := test_from_corpus_path(path, ctx.obj.jakt_path)):
+            console.log(
+                f"[red][ERROR] - Could not update '{path}' in state file![/red]"
+            )
+            sys.exit(1)
+        sf.map.append(new_test)
+    else:
+        if not pathlib.Path(test.jakt_sample_path).exists():
+            console.log("Removing deleted sample from state file")
+            if not sf.remove_by_corpus_path(path):
+                console.log(
+                    f"[red][ERROR] - Could not remove test by corpus path '{path}' from state file![/red]"
+                )
+                sys.exit(1)
+            else:
+                write_state_file(sf)
+                console.log(f"Test '{path}' removed from state file")
+                return
         console.log(f"Updating state of single test: '{path}'")
         console.log(f"jakt sample path: '{test.jakt_sample_path}'")
         console.log(f"Old hash: {test.jakt_sample_hash}")
@@ -480,14 +699,14 @@ def update_test(
         ).hexdigest()
         test.jakt_sample_hash = hash
         console.log(f"New hash: {test.jakt_sample_hash}")
-        write_state_file(sf)
+
+    write_state_file(sf)
 
 
 @state_app.command("all")
 def update_state_all(ctx: typer.Context):
     """Update the Jakt sample state for all tests."""
     write_state_file(build_test_map(ctx.obj.jakt_path))  # type: ignore
-    console.log("state file updated")
 
 
 if __name__ == "__main__":

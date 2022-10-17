@@ -1,0 +1,35 @@
+================================================================================
+Dictionaries indexed
+================================================================================
+
+function main() {
+    let dict = ["a": 1, "b": 2]
+
+    println("{}", dict["a"])
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (dictionary_literal
+          (dictionary_element
+            (string_literal)
+            (integer_literal))
+          (dictionary_element
+            (string_literal)
+            (integer_literal))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))
+          (argument
+            (array_expression
+              (identifier)
+              (string_literal))))))))

@@ -1,5 +1,5 @@
 ================================================================================
-Simple enum
+Enums parse enum
 ================================================================================
 
 enum Simple {
@@ -8,46 +8,10 @@ enum Simple {
     C
 }
 
---------------------------------------------------------------------------------
-
-(source_file
-  (enum_declaration
-    (type_identifier)
-    (enum_variant_list
-      (enum_variant
-        (identifier))
-      (enum_variant
-        (identifier))
-      (enum_variant
-        (identifier)))))
-
-================================================================================
-Simple enum with type
-================================================================================
-
 enum SimpleWithType {
     A(i32)
     B(u32)
 }
-
---------------------------------------------------------------------------------
-
-(source_file
-  (enum_declaration
-    (type_identifier)
-    (enum_variant_list
-      (enum_variant
-        (identifier)
-        (ordered_field_declaration_list
-          (primitive_type)))
-      (enum_variant
-        (identifier)
-        (ordered_field_declaration_list
-          (primitive_type))))))
-
-================================================================================
-Simple enum with struct type
-================================================================================
 
 enum SimpleWithStructType {
     A (
@@ -57,55 +21,15 @@ enum SimpleWithStructType {
     B(i32)
 }
 
---------------------------------------------------------------------------------
+enum SimpleWithTypeParameter<T> {
+    A(T)
+    B
+}
 
-(source_file
-  (enum_declaration
-    (type_identifier)
-    (enum_variant_list
-      (enum_variant
-        (identifier)
-        (ordered_field_declaration_list
-          (field_declaration
-            (field_identifier)
-            (primitive_type))
-          (field_declaration
-            (field_identifier)
-            (primitive_type))))
-      (enum_variant
-        (identifier)
-        (ordered_field_declaration_list
-          (primitive_type))))))
-
-; ================================================================================
-; NOT IMPLEMENTED Simple enum with Type Parameter
-; ================================================================================
-;
-; enum SimpleWithTypeParameter<T> {
-;     A(T)
-;     B
-; }
-;
-; --------------------------------------------------------------------------------
-;
-; (source_file)
-
-; ================================================================================
-; NOT IMPLEMENTED Simple enum with multiple Type Parameters
-; ================================================================================
-;
-; enum SimpleWithMultipleTypeParameters<T, U> {
-;     A(T)
-;     B(U)
-; }
-;
-; --------------------------------------------------------------------------------
-;
-; (source_file)
-
-================================================================================
-Enum with underlying type
-================================================================================
+enum SimpleWithMultipleTypeParameters<T, U> {
+    A(T)
+    B(U)
+}
 
 enum IntegralWithUnderlyingType: i32 {
     Zero
@@ -113,9 +37,67 @@ enum IntegralWithUnderlyingType: i32 {
     Two
 }
 
+function main() {}
+
 --------------------------------------------------------------------------------
 
 (source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier))
+      (enum_variant
+        (identifier))))
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type))
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type))))
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_struct_variant
+        (identifier)
+        (field_declaration
+          (field_identifier)
+          (primitive_type))
+        (field_declaration
+          (field_identifier)
+          (primitive_type)))
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type))))
+  (enum_declaration
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)))
+    (enum_variant_list
+      (enum_tuple_variant
+        (identifier)
+        (type_identifier))
+      (enum_variant
+        (identifier))))
+  (enum_declaration
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)
+        (type_identifier)))
+    (enum_variant_list
+      (enum_tuple_variant
+        (identifier)
+        (type_identifier))
+      (enum_tuple_variant
+        (identifier)
+        (type_identifier))))
   (enum_declaration
     (enum_integral_type
       (identifier)
@@ -127,4 +109,93 @@ enum IntegralWithUnderlyingType: i32 {
         (identifier)
         (integer_literal))
       (enum_variant
-        (identifier)))))
+        (identifier))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block)))
+
+================================================================================
+Enums parse enum (isolated)
+================================================================================
+
+enum SimpleWithStructType {
+    A (
+        a: i32,
+        b: u32
+    )
+    B(i32)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_struct_variant
+        (identifier)
+        (field_declaration
+          (field_identifier)
+          (primitive_type))
+        (field_declaration
+          (field_identifier)
+          (primitive_type)))
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type)))))
+
+================================================================================
+Enums parse enum (no commas)
+================================================================================
+
+enum SimpleWithStructType {
+    A ( a: i32 b: u32)
+    B(i32)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_struct_variant
+        (identifier)
+        (field_declaration
+          (field_identifier)
+          (primitive_type))
+        (field_declaration
+          (field_identifier)
+          (primitive_type)))
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type)))))
+
+================================================================================
+Enums parse enum (one comma)
+================================================================================
+
+enum SimpleWithStructType {
+    A ( a: i32,
+    b: u32)
+    B(i32)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_struct_variant
+        (identifier)
+        (field_declaration
+          (field_identifier)
+          (primitive_type))
+        (field_declaration
+          (field_identifier)
+          (primitive_type)))
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type)))))

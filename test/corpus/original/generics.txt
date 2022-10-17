@@ -1,0 +1,67 @@
+================================================================================
+A generic failing test that was not colored correctly
+================================================================================
+
+let x: Foo<i64> = Bar(x: 1, y: 2)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    (identifier)
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (primitive_type)))
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (identifier)
+          (integer_literal))
+        (argument
+          (identifier)
+          (integer_literal))))))
+
+================================================================================
+Generic call with single non primitive type
+================================================================================
+
+if window == null<GLFWwindow>() {
+    return
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_statement
+    (binary_expression
+      (identifier)
+      (generic_call_expression
+        (generic_type
+          (identifier)
+          (generic_arguments
+            (type_identifier)))
+        (arguments)))
+    (block
+      (return_statement))))
+
+================================================================================
+Generics: return raw T
+================================================================================
+
+function null<T>() -> raw T {
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (generic_function_declaration
+    (generic_type
+      (identifier)
+      (generic_arguments
+        (type_identifier)))
+    (parameters)
+    (type_identifier))
+  (identifier)
+  (block))

@@ -1,0 +1,37 @@
+================================================================================
+Namespace hello namespace
+================================================================================
+
+namespace Greeters {
+    function greet() {
+        println("Well, hello friends")
+    }
+}
+
+function main() {
+    Greeters::greet()
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_declaration
+    (identifier)
+    (block
+      (function_declaration
+        (identifier)
+        (parameters)
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (static_call_expression
+        (scoped_identifier)
+        (field_identifier)
+        (arguments)))))

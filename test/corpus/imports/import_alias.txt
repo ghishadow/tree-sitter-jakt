@@ -1,0 +1,25 @@
+================================================================================
+Imports import alias
+================================================================================
+
+import foo as baz
+
+function main() {
+    baz::bar()
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (import_statement
+    (identifier)
+    (import_as_clause)
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (static_call_expression
+        (scoped_identifier)
+        (field_identifier)
+        (arguments)))))

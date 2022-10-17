@@ -1,0 +1,72 @@
+================================================================================
+Enums is variant binding compound multiple
+================================================================================
+
+enum Foo {
+    Bar(i64)
+}
+
+function main() {
+    let foo = Foo::Bar(5)
+    let bar = Foo::Bar(7)
+
+    if foo is Bar(a) and bar is Bar(b) and a < b {
+        println("PASS")
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant_list
+      (enum_tuple_variant
+        (identifier)
+        (primitive_type))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (static_call_expression
+          (scoped_identifier)
+          (field_identifier)
+          (arguments
+            (argument
+              (integer_literal)))))
+      (let_declaration
+        (identifier)
+        (static_call_expression
+          (scoped_identifier)
+          (field_identifier)
+          (arguments
+            (argument
+              (integer_literal)))))
+      (if_statement
+        (logical_expression
+          (is_expression
+            (identifier)
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier)))))
+          (logical_expression
+            (is_expression
+              (identifier)
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (identifier)))))
+            (binary_expression
+              (identifier)
+              (identifier))))
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal)))))))))

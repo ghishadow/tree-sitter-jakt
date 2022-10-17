@@ -1,0 +1,82 @@
+================================================================================
+Classes restricted method
+================================================================================
+
+class Limited {
+    restricted(A) function get_secret() => "Shhhh! Don't tell anyone!"
+    restricted(A,B) function open_the_bank_vault() => "Open sesame!"
+}
+
+class A {
+    public function do_things() {
+        println("The secret is: {}", Limited::get_secret())
+        println("{}", Limited::open_the_bank_vault())
+    }
+}
+
+class B {}
+
+function main() {
+    A::do_things()
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (class_declaration
+    (type_identifier)
+    (field_declaration_list
+      (function_declaration
+        (restricted_specifier
+          (identifier))
+        (identifier)
+        (parameters)
+        (return_expression
+          (string_literal)))
+      (function_declaration
+        (restricted_specifier
+          (identifier)
+          (identifier))
+        (identifier)
+        (parameters)
+        (return_expression
+          (string_literal)))))
+  (class_declaration
+    (type_identifier)
+    (field_declaration_list
+      (function_declaration
+        (visibility_specifier)
+        (identifier)
+        (parameters)
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))
+              (argument
+                (static_call_expression
+                  (scoped_identifier)
+                  (field_identifier)
+                  (arguments)))))
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))
+              (argument
+                (static_call_expression
+                  (scoped_identifier)
+                  (field_identifier)
+                  (arguments)))))))))
+  (class_declaration
+    (type_identifier)
+    (field_declaration_list))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (static_call_expression
+        (scoped_identifier)
+        (field_identifier)
+        (arguments)))))

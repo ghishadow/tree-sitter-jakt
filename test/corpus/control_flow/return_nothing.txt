@@ -1,0 +1,38 @@
+================================================================================
+Control flow return nothing
+================================================================================
+
+function foo() {
+    if true {
+        println("PASS")
+        return
+    }
+}
+
+function main() {
+    foo()
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (if_statement
+        (boolean_literal)
+        (block
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))
+          (return_statement)))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (call_expression
+        (identifier)
+        (arguments)))))

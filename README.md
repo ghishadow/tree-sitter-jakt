@@ -6,13 +6,11 @@ Jakt is a memory safe programming language created for SerenityOS that transpile
 
 ## Roadmap
 
-**Work in progress. Jakt is under heavy development.**
-
-tree-sitter-jakt implements 75.00 of 177 (42.4%) of valid Jakt samples as of June 14, 2022
+tree-sitter-jakt implements 222.00 of 239 (92.9%) of passable Jakt samples as of September 18, 2022
 
 ## Screenshot
 
-![screenshot](/assets/screenshot_main.png)
+[Screenshots](https://github.com/demizer/tree-sitter-jakt/issues/1)
 
 ## How to run tests
 
@@ -53,7 +51,7 @@ Note: this step is only temporary. The highlighter will eventually be added to t
 
    ```
    mkdir -p ~/.config/nvim/queries/jakt
-   cp queries/highlights.scm ~/.config/nvim/queries/jakt/
+   cp queries/* ~/.config/nvim/queries/jakt/
    ```
 
 1. Install tree-sitter-jakt using neovim
